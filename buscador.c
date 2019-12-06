@@ -6,11 +6,15 @@ struct find_insert {
         char *texto;
 };
 
+pthread_mutex_t lock;
+
 void *find_and_insert(void *_arg) {
     struct find_insert *spa = _arg;
     GArray *found;
     found = busca_em_arquivo(spa->texto, spa->file_name);
+    pthread_mutex_lock(&lock);
     g_hash_table_insert(spa->hashtable, spa->file_name, found);
+    pthread_mutex_unlock(&lock);
     return NULL;
 }
 
@@ -207,6 +211,13 @@ GHashTable *busca_na_pasta(char *texto, char *dir){
     pthread_t *pids = malloc(sizeof(pthread_t) * resp->len);
 
 
+    if (pthread_mutex_init(&lock, NULL) != 0)
+    {
+        printf("\n mutex init failed\n");
+        exit(3);
+    }
+
+
     for (int i = 0; i < resp->len; i++)
     {
         file_name = g_array_index( resp, GString, i );
@@ -228,6 +239,8 @@ GHashTable *busca_na_pasta(char *texto, char *dir){
     for (int i = 0; i < resp->len; i++) {
         pthread_join(pids[i], NULL);
     }
+
+    pthread_mutex_destroy(&lock);
 
     printf("There are %d keys in the hash\n", g_hash_table_size(hash));
     //printf("The capital of Texas is %p\n", (char*) g_hash_table_lookup(hash, "Makefile"));

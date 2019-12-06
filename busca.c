@@ -21,6 +21,8 @@ int main(int argc, char const *argv[])
     stat(dir, &path_stat);
     if (S_ISREG(path_stat.st_mode)){
 
+        busca_em_arquivo(texto, dir);
+
     } else {
         GHashTable *hash = busca_na_pasta(texto , dir);
 
